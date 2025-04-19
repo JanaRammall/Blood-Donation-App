@@ -1,25 +1,34 @@
+<!-- File: admin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <h2>Admin Dashboard</h2>
+  <header>
+    <h1>🩸 Admin Dashboard</h1>
+  </header>
   <nav>
     <ul>
-      <li><a href="#" onclick="loadSection('donors')">Manage Donors</a></li>
-      <li><a href="#" onclick="loadSection('hospitals')">Manage Hospitals</a></li>
-      <li><a href="#" onclick="loadSection('requests')">Manage Requests</a></li>
-      <li><a href="#" onclick="loadSection('inventory')">Blood Inventory</a></li>
-      <li><a href="#" onclick="loadSection('users')">Manage Users</a></li>
-      <li><a href="#" onclick="loadSection('statistics')">View Statistics</a></li>
+      <li><a href="#" data-section="donor">Manage Donors</a></li>
+      <li><a href="#" data-section="hospital">Manage Hospitals</a></li>
+      <li><a href="#" data-section="request">Manage Requests</a></li>
+      <li><a href="#" data-section="inventory">Blood Inventory</a></li>
+      <li><a href="#" data-section="users">Manage Users</a></li>
+      <li><a href="#" data-section="stats">View Statistics</a></li>
     </ul>
+    
   </nav>
-  <section id="content">
-    <!-- Dynamic content will be loaded here -->
-  </section>
+
+  <main>
+    <section id="dashboardContent">
+      <p>Welcome! Please choose a functionality from the menu above.</p>
+    </section>
+  </main>
+
   <script src="js/admin.js"></script>
 </body>
 </html>

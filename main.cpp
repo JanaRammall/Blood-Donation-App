@@ -92,3 +92,5 @@ int main() {
 
   return 0;
 }
+
+//g++ core/Admin.cpp core/Auditor.cpp core/BloodUnit.cpp core/DonationRequest.cpp core/Donor.cpp core/Hospital.cpp core/Recipient.cpp core/Staff.cpp core/User.cpp core/Viewer.cpp db/Database.cpp utils/Logger.cpp core/webserver.cpp -Iutils -lsqlite3 -lssl -lcrypto -lws2_32 -o server.exe
