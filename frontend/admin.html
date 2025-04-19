@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+  <nav>
+    <ul>
+      <li><a href="#" onclick="loadSection('donors')">Manage Donors</a></li>
+      <li><a href="#" onclick="loadSection('hospitals')">Manage Hospitals</a></li>
+      <li><a href="#" onclick="loadSection('requests')">Manage Requests</a></li>
+      <li><a href="#" onclick="loadSection('inventory')">Blood Inventory</a></li>
+      <li><a href="#" onclick="loadSection('users')">Manage Users</a></li>
+      <li><a href="#" onclick="loadSection('statistics')">View Statistics</a></li>
+    </ul>
+  </nav>
+  <section id="content">
+    <!-- Dynamic content will be loaded here -->
+  </section>
+  <script src="js/admin.js"></script>
+</body>
+</html>
