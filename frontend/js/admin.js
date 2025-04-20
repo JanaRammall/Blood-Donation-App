@@ -10,17 +10,23 @@ function loadSection(section) {
       return response.text();
     })
     .then(html => {
-      document.getElementById('dashboardContent').innerHTML = html;
-      // Optionally, load corresponding JS for the section
-      const script = document.createElement('script');
-      script.src = `js/${section}.js`;
-      document.body.appendChild(script);
+      const container = document.getElementById('dashboardContent');
+      container.innerHTML = html;
+
+      // Wait for DOM to be updated before loading script
+      setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = `js/${section}.js`;
+        script.onload = () => console.log(`✅ ${section}.js loaded`);
+        document.body.appendChild(script);
+      }, 50); // slight delay ensures DOM elements exist
     })
     .catch(error => {
       console.error(error);
       document.getElementById('dashboardContent').innerHTML = `<p>Error loading section: ${section}</p>`;
     });
 }
+
 
 // Attach event listeners to navigation links
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,16 +1,54 @@
-<!-- sections/hospital.html -->
-<h2>🏥 Manage Hospitals</h2>
+<!-- File: sections/hospital.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Hospitals</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { padding: 8px 12px; border: 1px solid #ccc; }
+    th { background-color: #f2f2f2; }
+    button { margin: 0 4px; }
+  </style>
+</head>
+<body>
+  <h2>🏥 Manage Hospitals</h2>
 
-<form id="addHospitalForm">
-  <label for="hospitalName">Hospital Name:</label>
-  <input type="text" id="hospitalName" name="hospitalName" required />
+  <form id="addHospitalForm">
+    <label for="hospitalName">Hospital Name:</label>
+    <input type="text" id="hospitalName" name="hospitalName" required />
 
-  <label for="hospitalLocation">Location:</label>
-  <input type="text" id="hospitalLocation" name="hospitalLocation" required />
+    <label for="hospitalLocation">Location:</label>
+    <input type="text" id="hospitalLocation" name="hospitalLocation" required />
 
-  <button type="submit">➕ Add Hospital</button>
-</form>
+    <label for="hospitalContact">Contact:</label>
+    <input type="text" id="hospitalContact" name="hospitalContact" required />
 
-<div id="hospitalList">
-  <!-- Fetched hospitals will appear here -->
-</div>
+    <button type="submit">➕ Add Hospital</button>
+  </form>
+
+  <hr />
+
+  <h3>📋 Registered Hospitals</h3>
+  <table id="hospitalTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Hospital Name</th>
+        <th>Location</th>
+        <th>Contact</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Fetched hospitals will go here -->
+    </tbody>
+  </table>
+
+
+  
+  <script src="../js/hospital.js"></script>
+</body>
+</html>

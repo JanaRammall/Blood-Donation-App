@@ -12,7 +12,7 @@ void Admin::displayMenu() {
         printMenu(ADMIN_MENU, "Admin Panel");
         int choice = inputInt("");
         switch (choice) {
-            // 🏥 Hospital Management
+            // 🏥 Hospital Management DONE
             case 1:  addHospital(username);           break;
             case 2:  viewHospitals();                 break;
             case 3:  updateHospital();                break;

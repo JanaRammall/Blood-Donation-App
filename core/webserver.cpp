@@ -24,7 +24,7 @@ std::string sha256(const std::string& input) {
 
 int main() {
     Server svr;
-
+   
 // ✅ FIXED: Allow DELETE in CORS preflight
 svr.Options(R"(.*)", [](const Request& req, Response& res) {
     res.set_header("Access-Control-Allow-Origin", "*");
@@ -267,6 +267,118 @@ svr.Delete(R"(/user/(\w+))", [](const Request& req, Response& res) {
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_content(json({{"success", success}}).dump(), "application/json");
 });
+
+// GET all hospitals
+svr.Get("/hospitals", [](const Request& req, Response& res) {
+    sqlite3* db = Database::getDB();
+    std::string sql = "SELECT hospitalID, name, location, contact, createdAt FROM Hospital";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        res.status = 500;
+        res.set_content(R"({"success": false})", "application/json");
+        return;
+    }
+
+    json result = json::array();
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        result.push_back({
+            {"id", sqlite3_column_int(stmt, 0)},
+            {"name", (const char*)sqlite3_column_text(stmt, 1)},
+            {"location", (const char*)sqlite3_column_text(stmt, 2)},
+            {"contact", (const char*)sqlite3_column_text(stmt, 3)},
+            {"createdAt", (const char*)sqlite3_column_text(stmt, 4)}
+        });
+        
+    }
+
+    sqlite3_finalize(stmt);
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_content(result.dump(), "application/json");
+});
+
+// DELETE a hospital
+svr.Delete(R"(/hospital/(\d+))", [](const Request& req, Response& res) {
+    int id = std::stoi(req.matches[1]);
+    sqlite3* db = Database::getDB();
+    std::string sql = "DELETE FROM Hospital WHERE hospitalID = ?";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_bind_int(stmt, 1, id);
+    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_content(json({{"success", success}}).dump(), "application/json");
+});
+
+    // ✅ Start the server
+// POST /hospital — Add Hospital
+svr.Post("/hospital", [](const Request& req, Response& res) {
+    try {
+        auto data = json::parse(req.body);
+        std::string name = data["name"];
+        std::string location = data["location"];
+        std::string contact = data["contact"];  // ⬅️ NEW FIELD
+
+        sqlite3* db = Database::getDB();
+        std::string sql = "INSERT INTO Hospital (name, location, contact) VALUES (?, ?, ?)";
+        sqlite3_stmt* stmt;
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            res.status = 500;
+            res.set_content(R"({"success": false, "message": "Prepare failed"})", "application/json");
+            return;
+        }
+
+        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, location.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, contact.c_str(), -1, SQLITE_TRANSIENT);  // ⬅️ BIND CONTACT
+
+        bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+        sqlite3_finalize(stmt);
+
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+
+    } catch (...) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.status = 400;
+        res.set_content(R"({"success": false, "message": "Invalid input"})", "application/json");
+    }
+});
+// PUT /hospital/:id — Update Hospital
+svr.Put(R"(/hospital/(\d+))", [](const Request& req, Response& res) {
+    int id = std::stoi(req.matches[1]);
+    auto data = json::parse(req.body);
+
+    std::string name = data["name"];
+    std::string location = data["location"];
+    std::string contact = data["contact"];  // ⬅️ NEW
+
+    sqlite3* db = Database::getDB();
+    std::string sql = "UPDATE Hospital SET name = ?, location = ?, contact = ? WHERE hospitalID = ?";
+    sqlite3_stmt* stmt;
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        res.status = 500;
+        res.set_content(R"({"success": false, "message": "Prepare failed"})", "application/json");
+        return;
+    }
+
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, location.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, contact.c_str(), -1, SQLITE_TRANSIENT);  // ⬅️ BIND CONTACT
+    sqlite3_bind_int(stmt, 4, id);
+
+    bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+    sqlite3_finalize(stmt);
+
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_content(json({{"success", success}}).dump(), "application/json");
+});
+
+
+
 
     // ✅ Start the server
     std::cout << "🟢 Server is running on http://localhost:8080\n";
