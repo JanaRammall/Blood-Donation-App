@@ -22,12 +22,12 @@ public:
 
     static bool markAsFulfilled(int recipientID);
     static int  getRecipientIDByName(const std::string& fullName);
-
-    //!update
     static void fulfillRecipientNeed(int recipientID, int quantity);
-
-    //!update
     static void viewUrgentRecipients();
+    static bool updateRecipient(int id, const std::string& name, const std::string& bloodType,
+        const std::string& urgency, const std::string& contact, int hospitalID);
+    static bool deleteRecipient(int id);
+
 
 };
 

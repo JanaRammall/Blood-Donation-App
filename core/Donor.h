@@ -19,6 +19,13 @@ public:
     static void findDonorsByBloodType(const std::string& bloodType);
 
     static int getDonorIDByUsername(const std::string& username);
+
+    static bool updateDonor(int donorID, const std::string& name,
+        int age, const std::string& gender,
+        const std::string& bloodType,
+        const std::string& contact);
+
+    static bool deleteDonor(int donorID);
 };
 
 #endif

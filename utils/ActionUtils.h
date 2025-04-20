@@ -28,6 +28,19 @@ namespace Actions
         Hospital::viewAllHospitals();
     }
 
+    inline void updateHospital() {
+        int id = inputInt("Hospital ID to update: ");
+        std::string name = inputLine("New name: ");
+        std::string location = inputLine("New location: ");
+        std::string contact = inputLine("New contact: ");
+        Hospital::updateHospital(id, name, location, contact);
+    }
+    
+    inline void deleteHospital() {
+        int id = inputInt("Hospital ID to delete: ");
+        Hospital::deleteHospital(id);
+    }
+
     // ─── Recipient ───────────────────────────────────────────────────────────────
     inline void addRecipient(const std::string &currentUser)
     {
@@ -56,7 +69,6 @@ namespace Actions
         Recipient::viewUnfulfilledRecipients();
     }
 
-    //!update
     inline void transfuseToRecipient(const std::string& currentUser) {
         int id = inputInt("Recipient ID to fulfill: ");
         int qty = inputInt("Quantity of blood needed: ");
@@ -64,10 +76,25 @@ namespace Actions
         Logger::log(currentUser, "Transfused " + std::to_string(qty) + " units to recipient ID #" + std::to_string(id));
     }
 
-    //!update
     inline void viewUrgentUnfulfilledRecipients() {
         Recipient::viewUrgentRecipients();
-    }    
+    }
+    
+    inline void updateRecipient() {
+        int id = inputInt("Recipient ID to update: ");
+        std::string name = inputLine("New name: ");
+        std::string bt = inputLine("New blood type: ");
+        std::string urgency = inputLine("New urgency level: ");
+        std::string contact = inputLine("New contact: ");
+        std::string hospital = inputLine("New hospital name: ");
+        int hospitalID = Hospital::getHospitalIDByName(hospital);
+        Recipient::updateRecipient(id, name, bt, urgency, contact, hospitalID);
+    }
+    
+    inline void deleteRecipient() {
+        int id = inputInt("Recipient ID to delete: ");
+        Recipient::deleteRecipient(id);
+    }
 
     // ─── Donation Request ────────────────────────────────────────────────────────
     inline void createDonationRequest(const std::string &currentUser)
@@ -120,6 +147,22 @@ namespace Actions
         auto type = inputLine("Blood type to filter by: ");
         Donor::findDonorsByBloodType(type);
     }
+
+    inline void updateDonor() {
+        int id = inputInt("Donor ID to edit: ");
+        std::string name = inputLine("New name: ");
+        int age = inputInt("New age: ");
+        std::string gender = inputLine("New gender: ");
+        std::string bloodType = inputLine("New blood type: ");
+        std::string contact = inputLine("New contact: ");
+        Donor::updateDonor(id, name, age, gender, bloodType, contact);
+    }
+    
+    inline void deleteDonor() {
+        int id = inputInt("Donor ID to delete: ");
+        Donor::deleteDonor(id);
+    }
+    
 
     // ─── BloodUnit ───────────────────────────────────────────────────────────────
     inline void viewBloodInventory()

@@ -13,8 +13,6 @@ public:
     static void getUnitsByType(const std::string& bloodType);
     static void removeExpiredUnits();
     static void listAllAvailable();
-    
-    //!update
     static bool useBloodUnits(const std::string& bloodType, int quantity);
 };
 

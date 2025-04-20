@@ -2,18 +2,20 @@
 #define MENUUTILS_H
 
 #include <iostream>
-#include <vector>
-#include <utility>
 #include <string>
+#include <vector>
+#include "MenuConfig.h"
 
-inline void printMenu(const std::vector<std::pair<int,std::string>>& menu, 
-                      const std::string& title) {
+inline void printMenu(const std::vector<MenuSection>& sections, const std::string& title) {
     std::cout << "\n====== " << title << " ======\n";
-    for (auto& opt : menu) {
-        std::cout << opt.first << ". " << opt.second << "\n";
+    for (const auto& section : sections) {
+        std::cout << "\n-- " << section.title << " --\n";
+        for (const auto& item : section.items) {
+            std::cout << item.number << ". " << item.label << "\n";
+        }
     }
     std::cout << "======================================\n";
     std::cout << "Choice: ";
 }
 
-#endif 
+#endif

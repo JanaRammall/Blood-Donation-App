@@ -82,16 +82,7 @@ void Recipient::viewUnfulfilledRecipients()
         extractRecipientRow);
 }
 
-void Recipient::viewFulfilledRecipients()
-{
-    static const std::string sql =
-        "SELECT recipientID,name,bloodType,urgencyLevel,contact,hospitalID,fulfilled "
-        "FROM Recipient WHERE fulfilled=1 ORDER BY createdAt DESC;";
-    viewByQuery<RecipientInfo>(
-        sql,
-        "✅ Fulfilled Recipients",
-        extractRecipientRow);
-}
+
 
 bool Recipient::markAsFulfilled(int recipientID)
 {
@@ -140,7 +131,9 @@ int Recipient::getRecipientIDByName(const std::string &fullName)
     return recipientID;
 }
 
-//!update
+
+
+
 void Recipient::fulfillRecipientNeed(int recipientID, int quantity) {
     sqlite3* db = Database::getDB();
 
@@ -181,7 +174,6 @@ void Recipient::fulfillRecipientNeed(int recipientID, int quantity) {
     sqlite3_finalize(stmt);
 }
 
-//!update
 void Recipient::viewUrgentRecipients() {
     static const std::string sql =
         "SELECT recipientID, name, bloodType, urgencyLevel, contact, hospitalID, fulfilled "
@@ -192,4 +184,39 @@ void Recipient::viewUrgentRecipients() {
         "🚨 Urgent Unfulfilled Recipients",
         extractRecipientRow
     );
+}
+
+bool Recipient::updateRecipient(int id, const std::string& name, const std::string& bloodType,
+    const std::string& urgency, const std::string& contact, int hospitalID) {
+    sqlite3* db = Database::getDB();
+    std::string sql =
+    "UPDATE Recipient SET name = ?, bloodType = ?, urgencyLevel = ?, contact = ?, hospitalID = ? "
+    "WHERE recipientID = ?";
+    sqlite3_stmt* stmt;
+    Database::prepareStatement(db, stmt, sql);
+
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, bloodType.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, urgency.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, contact.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 5, hospitalID);
+    sqlite3_bind_int(stmt, 6, id);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+    std::cout << (success ? "✅ Recipient updated successfully.\n" : "❌ Failed to update recipient.\n");
+    return success;
+}
+
+bool Recipient::deleteRecipient(int id) {
+    sqlite3* db = Database::getDB();
+    std::string sql = "DELETE FROM Recipient WHERE recipientID = ?";
+    sqlite3_stmt* stmt;
+    Database::prepareStatement(db, stmt, sql);
+    sqlite3_bind_int(stmt, 1, id);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+    std::cout << (success ? "🗑️ Recipient deleted successfully.\n" : "❌ Failed to delete recipient.\n");
+    return success;
 }

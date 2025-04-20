@@ -86,7 +86,7 @@ void BloodUnit::listAllAvailable()
         extractBloodUnitRow);
 }
 
-//!update
+
 bool BloodUnit::useBloodUnits(const std::string& bloodType, int quantity) {
     sqlite3* db = Database::getDB();
 

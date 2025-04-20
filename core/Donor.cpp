@@ -107,3 +107,48 @@ int Donor::getDonorIDByUsername(const std::string &username)
     sqlite3_finalize(stmt);
     return donorID;
 }
+bool Donor::updateDonor(int donorID, const std::string& name,
+    int age, const std::string& gender,
+    const std::string& bloodType,
+    const std::string& contact) {
+    std::string sql = R"(
+    UPDATE Donor
+    SET name = ?, age = ?, gender = ?, bloodType = ?, contact = ?
+    WHERE donorID = ?
+    )";
+
+    sqlite3* db = Database::getDB();
+    sqlite3_stmt* stmt;
+    Database::prepareStatement(db, stmt, sql);
+
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, age);
+    sqlite3_bind_text(stmt, 3, gender.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, bloodType.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, contact.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 6, donorID);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+
+    if (success) std::cout << "✅ Donor updated successfully.\n";
+    else std::cerr << "❌ Failed to update donor.\n";
+
+    return success;
+}
+
+bool Donor::deleteDonor(int donorID) {
+    std::string sql = "DELETE FROM Donor WHERE donorID = ?";
+    sqlite3* db = Database::getDB();
+    sqlite3_stmt* stmt;
+    Database::prepareStatement(db, stmt, sql);
+    sqlite3_bind_int(stmt, 1, donorID);
+
+    bool success = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+
+    if (success) std::cout << "🗑️ Donor deleted.\n";
+    else std::cerr << "❌ Failed to delete donor.\n";
+
+    return success;
+}
