@@ -127,7 +127,7 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
     svr.Post("/donation-request", [](const Request& req, Response& res) {
         try {
             auto data = json::parse(req.body);
-            std::string name = data["name"];
+            std::string name = data["fullName"];  // ✅ FIXED here
             std::string bloodType = data["bloodType"];
             int age = data["age"];
             std::string gender = data["gender"];
@@ -144,7 +144,7 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
             res.set_content(R"({"success":false,"message":"Invalid input"})", "application/json");
         }
     });
-
+    
     
     svr.Get("/donation-requests/pending", [](const Request& req, Response& res) {
         json result = json::array();

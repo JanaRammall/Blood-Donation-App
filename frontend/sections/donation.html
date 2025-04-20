@@ -7,35 +7,43 @@
   <button onclick="showSection('fulfilled')">✅ Fulfilled</button>
 </div>
 
-<!-- CREATE -->
+<!-- CREATE SECTION -->
 <section id="section-create" class="donation-section">
   <form id="donationForm">
     <input type="text" id="fullName" placeholder="Full Name" required />
-    <input type="text" id="bloodType" placeholder="Blood Type" required />
+    <input type="text" id="bloodType" placeholder="Blood Type (e.g. A+)" required />
     <input type="number" id="age" placeholder="Age" required />
     <input type="text" id="gender" placeholder="Gender" required />
-    <input type="text" id="contact" placeholder="Contact" required />
+    <input type="text" id="contact" placeholder="Contact Number" required />
     <input type="number" id="hospitalID" placeholder="Hospital ID" required />
     <input type="date" id="scheduledDate" required />
-    <button type="submit">Submit Request</button>
+    <button type="submit">📨 Submit Request</button>
     <p id="msg-create"></p>
   </form>
 </section>
 
-<!-- PENDING LIST -->
+<!-- PENDING -->
 <section id="section-pending" class="donation-section" style="display:none">
   <h3>⏳ Pending Requests</h3>
   <table>
-    <thead><tr><th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th><th>Actions</th></tr></thead>
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th><th>Actions</th>
+      </tr>
+    </thead>
     <tbody id="pendingTable"></tbody>
   </table>
 </section>
 
-<!-- FULFILLED LIST -->
+<!-- FULFILLED -->
 <section id="section-fulfilled" class="donation-section" style="display:none">
   <h3>✅ Fulfilled Requests</h3>
   <table>
-    <thead><tr><th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th></tr></thead>
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th>
+      </tr>
+    </thead>
     <tbody id="fulfilledTable"></tbody>
   </table>
 </section>
