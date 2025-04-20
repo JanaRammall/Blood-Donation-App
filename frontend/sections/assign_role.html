@@ -1,0 +1,23 @@
+<!-- sections/assign_role.html -->
+<section class="dashboard-section">
+    <h2>🔁 Assign Role to User</h2>
+  
+    <form id="assignRoleForm">
+      <label for="targetUsername">Username:</label>
+      <input type="text" id="targetUsername" required />
+  
+      <label for="targetRole">New Role:</label>
+      <select id="targetRole" required>
+        <option value="">-- Select Role --</option>
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+        <option value="viewer">Viewer</option>
+        <option value="audit">Audit</option>
+      </select>
+  
+      <button type="submit">Update Role</button>
+    </form>
+  
+    <p id="roleAssignMsg" class="status"></p>
+  </section>
+  

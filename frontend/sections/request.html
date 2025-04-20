@@ -1,0 +1,22 @@
+<!-- sections/request.html -->
+<h2>📋 Manage Donation Requests</h2>
+
+<form id="requestForm">
+  <label for="recipientName">Recipient Name:</label>
+  <input type="text" id="recipientName" required />
+
+  <label for="bloodType">Blood Type:</label>
+  <input type="text" id="bloodType" required />
+
+  <label for="units">Units Needed:</label>
+  <input type="number" id="units" required min="1" />
+
+  <label for="hospital">Hospital Name:</label>
+  <input type="text" id="hospital" required />
+
+  <button type="submit">➕ Submit Request</button>
+</form>
+
+<div id="requestList">
+  <!-- Submitted requests will appear here -->
+</div>

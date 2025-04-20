@@ -52,13 +52,13 @@ void Database::createTables(sqlite3* db) {
     std::string sql =
 
         "PRAGMA foreign_keys = ON;"
-
         "CREATE TABLE IF NOT EXISTS User ("
-        "  userID INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "  username TEXT UNIQUE NOT NULL,"
-        "  password TEXT NOT NULL,"
-        "  role TEXT NOT NULL CHECK(role IN ('admin','staff','viewer','audit'))"
-        ");"
+        "    userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "    username TEXT UNIQUE NOT NULL,"
+        "    password TEXT NOT NULL,"
+        "   role TEXT NOT NULL CHECK(role IN ('admin','staff','viewer','audit')),"
+        "    createdAt TEXT DEFAULT (datetime('now'))"
+        "  );"
         
         "CREATE TABLE IF NOT EXISTS Donor ("
         "  donorID INTEGER PRIMARY KEY AUTOINCREMENT,"

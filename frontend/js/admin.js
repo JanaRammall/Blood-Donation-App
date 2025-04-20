@@ -1,25 +1,34 @@
-// File: js/Admin.js
+// File: js/admin.js
 
 function loadSection(section) {
   // Fetch and display the corresponding section
   fetch(`sections/${section}.html`)
-    .then(response => response.text())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to load section: ${section}`);
+      }
+      return response.text();
+    })
     .then(html => {
-      document.getElementById('content').innerHTML = html;
-
-      // Dynamically load the corresponding JS for the section
+      document.getElementById('dashboardContent').innerHTML = html;
+      // Optionally, load corresponding JS for the section
       const script = document.createElement('script');
       script.src = `js/${section}.js`;
-      script.onload = () => {
-        console.log(`${section}.js has been loaded successfully.`);
-        // You can initialize functions from the loaded script here if needed
-      };
-      script.onerror = () => {
-        console.error(`Failed to load ${section}.js`);
-      };
       document.body.appendChild(script);
     })
     .catch(error => {
-      console.error(`Error loading section ${section}:`, error);
+      console.error(error);
+      document.getElementById('dashboardContent').innerHTML = `<p>Error loading section: ${section}</p>`;
     });
 }
+
+// Attach event listeners to navigation links
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('nav a[data-section]').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      const section = link.getAttribute('data-section');
+      loadSection(section);
+    });
+  });
+});
