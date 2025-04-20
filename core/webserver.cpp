@@ -488,6 +488,23 @@ svr.Get(R"(/donors/type/([\w+-]+))", [](const Request& req, Response& res) {
             res.set_content(R"({"success": false, "message": "Server error"})", "application/json");
         }
     });
+// DELETE /blood/expired — Remove expired blood units
+svr.Delete("/blood/expired", [](const Request& req, Response& res) {
+    sqlite3* db = Database::getDB();
+    std::string sql = "DELETE FROM BloodUnit WHERE expirationDate < DATE('now')";
+    sqlite3_stmt* stmt;
+    bool success = false;
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        success = sqlite3_step(stmt) == SQLITE_DONE;
+        sqlite3_finalize(stmt);
+    }
+
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.set_header("Access-Control-Allow-Headers", "Content-Type");
+    res.set_content(json({{"success", success}}).dump(), "application/json");
+});
 
     // 🩸 GET /blood
     svr.Get("/blood", [](const Request& req, Response& res) {
@@ -558,7 +575,32 @@ svr.Get(R"(/donors/type/([\w+-]+))", [](const Request& req, Response& res) {
         }
     });
     
-
+    svr.Get("/logs", [](const Request& req, Response& res) {
+        sqlite3* db = Database::getDB();
+        sqlite3_stmt* stmt;
+        std::string sql = "SELECT timestamp, username, activity FROM Log ORDER BY timestamp DESC";
+    
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            res.status = 500;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(R"({"success": false, "message": "Query failed"})", "application/json");
+            return;
+        }
+    
+        json logs = json::array();
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            logs.push_back({
+                {"timestamp", (const char*)sqlite3_column_text(stmt, 0)},
+                {"username",  (const char*)sqlite3_column_text(stmt, 1)},
+                {"activity",  (const char*)sqlite3_column_text(stmt, 2)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(logs.dump(), "application/json");
+    });
+    
+    
     // 👥 GET /users
     svr.Get("/users", [](const Request& req, Response& res) {
         sqlite3* db = Database::getDB();
