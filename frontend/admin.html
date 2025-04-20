@@ -8,6 +8,38 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+
+  <style>nav ul {
+    display: flex;
+    flex-wrap: wrap; /* Wraps on small screens */
+    justify-content: center;
+    gap: 15px;
+    list-style: none;
+    padding: 20px;
+    background-color: #f7f7f7;
+    border-bottom: 2px solid #ddd;
+    margin: 0;
+  }
+  
+  nav li a {
+    display: inline-block;
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-size: 15px;
+  }
+  
+  nav li a:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #c0392b, #e74c3c);
+  }
+  </style>
   <header>
     <h1>🩸 Admin Dashboard</h1>
   </header>
@@ -21,6 +53,8 @@
       <li><a href="#" data-section="stats">View Statistics</a></li>
       <li><a href="#" data-section="create_admin">➕ Create Admin</a></li>
       <li><a href="#" data-section="assign_role">🔁 Assign Role</a></li>
+      <li><a href="#" data-section="recipient">Manage Recipients</a></li>
+
 
 
     </ul>

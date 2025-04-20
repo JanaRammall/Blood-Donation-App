@@ -1,0 +1,43 @@
+<!-- File: sections/donation.html -->
+<h2>🗓️ Donation Request Management</h2>
+
+<div class="donation-controls">
+  <button onclick="showSection('create')">➕ Create Request</button>
+  <button onclick="showSection('pending')">⏳ Pending</button>
+  <button onclick="showSection('fulfilled')">✅ Fulfilled</button>
+</div>
+
+<!-- CREATE -->
+<section id="section-create" class="donation-section">
+  <form id="donationForm">
+    <input type="text" id="fullName" placeholder="Full Name" required />
+    <input type="text" id="bloodType" placeholder="Blood Type" required />
+    <input type="number" id="age" placeholder="Age" required />
+    <input type="text" id="gender" placeholder="Gender" required />
+    <input type="text" id="contact" placeholder="Contact" required />
+    <input type="number" id="hospitalID" placeholder="Hospital ID" required />
+    <input type="date" id="scheduledDate" required />
+    <button type="submit">Submit Request</button>
+    <p id="msg-create"></p>
+  </form>
+</section>
+
+<!-- PENDING LIST -->
+<section id="section-pending" class="donation-section" style="display:none">
+  <h3>⏳ Pending Requests</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody id="pendingTable"></tbody>
+  </table>
+</section>
+
+<!-- FULFILLED LIST -->
+<section id="section-fulfilled" class="donation-section" style="display:none">
+  <h3>✅ Fulfilled Requests</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Name</th><th>Blood</th><th>Age</th><th>Gender</th><th>Contact</th><th>Hospital</th><th>Date</th></tr></thead>
+    <tbody id="fulfilledTable"></tbody>
+  </table>
+</section>
+
+<script src="js/donation.js"></script>

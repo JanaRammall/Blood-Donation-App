@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", function () {
+// File: hospital.js
+
+    // 👇 Wait a bit to ensure section is fully injected
     setTimeout(() => {
       const form = document.getElementById("addHospitalForm");
       const table = document.querySelector("#hospitalTable tbody");
@@ -10,10 +12,14 @@ document.addEventListener("DOMContentLoaded", function () {
   
       console.log("✅ hospital.js initialized");
   
+      // Escape helper
       function escapeString(str) {
-        return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        return str.replace(/\\/g, "\\\\")
+                  .replace(/'/g, "\\'")
+                  .replace(/"/g, '\\"');
       }
   
+      // Submit form
       form.addEventListener("submit", function (e) {
         e.preventDefault();
   
@@ -21,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const location = document.getElementById("hospitalLocation").value.trim();
         const contact = document.getElementById("hospitalContact").value.trim();
   
-        console.log("🆕 New hospital to add:", { name, location, contact });
+        console.log("🆕 Adding:", { name, location, contact });
   
         if (!name || !location || !contact) {
           alert("❗ Please fill in all fields.");
@@ -46,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
           .catch(err => console.error("❌ POST error:", err));
       });
   
+      // Load hospitals
       function loadHospitals() {
         fetch("http://localhost:8080/hospitals")
           .then(res => res.json())
@@ -70,8 +77,10 @@ document.addEventListener("DOMContentLoaded", function () {
           .catch(err => console.error("❌ GET error:", err));
       }
   
+      // Delete
       window.deleteHospital = function (id) {
         if (!confirm("Delete hospital?")) return;
+  
         fetch(`http://localhost:8080/hospital/${id}`, {
           method: "DELETE"
         })
@@ -87,6 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
           .catch(err => console.error("❌ DELETE error:", err));
       };
   
+      // Edit
       window.editHospital = function (id, currentName, currentLocation, currentContact) {
         const name = prompt("New name:", currentName);
         if (!name) return;
@@ -112,8 +122,8 @@ document.addEventListener("DOMContentLoaded", function () {
           .catch(err => console.error("❌ PUT error:", err));
       };
   
-      // Load hospitals on initial page load
+      // Initial fetch
       loadHospitals();
-    }, 50); // Wait for the section to be fully inserted
-  });
+    }, 100); // <- Delay to wait for HTML load
+
   

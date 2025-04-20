@@ -1,6 +1,8 @@
 #include "../utils/httplib.h"
 #include "../db/Database.h"
 #include "../utils/json.hpp"
+#include "../core/Recipient.h"
+#include "../core/Donor.h"
 
 #include <iostream>
 #include <iomanip>
@@ -25,13 +27,14 @@ std::string sha256(const std::string& input) {
 int main() {
     Server svr;
    
-// ✅ FIXED: Allow DELETE in CORS preflight
+// Allow preflight OPTIONS requests
 svr.Options(R"(.*)", [](const Request& req, Response& res) {
     res.set_header("Access-Control-Allow-Origin", "*");
-    res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.set_header("Access-Control-Allow-Headers", "Content-Type");
-    res.status = 204;
+    res.status = 204; // No Content
 });
+
     svr.Post("/assign_role", [](const Request& req, Response& res) {
         try {
             auto data = json::parse(req.body);
@@ -120,6 +123,343 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
         }
     });
 
+    svr.Post("/donation-request", [](const Request& req, Response& res) {
+        try {
+            auto data = json::parse(req.body);
+            std::string name = data["name"];
+            std::string bloodType = data["bloodType"];
+            int age = data["age"];
+            std::string gender = data["gender"];
+            std::string contact = data["contact"];
+            int hospitalID = data["hospitalID"];
+            std::string scheduledDate = data["scheduledDate"];
+    
+            bool success = DonationRequest::createRequest(name, bloodType, age, gender, contact, hospitalID, scheduledDate);
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(json({{"success", success}}).dump(), "application/json");
+        } catch (...) {
+            res.status = 400;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(R"({"success":false,"message":"Invalid input"})", "application/json");
+        }
+    });
+
+    
+    svr.Get("/donation-requests/pending", [](const Request& req, Response& res) {
+        json result = json::array();
+        sqlite3* db = Database::getDB();
+    
+        std::string sql = R"(
+            SELECT D.requestID, D.fullName, D.bloodType, D.age, D.gender, D.contact,
+                   H.name AS hospitalName, D.scheduledDate, D.fulfilled
+            FROM DonationRequest D
+            JOIN Hospital H ON D.hospitalID = H.hospitalID
+            WHERE D.fulfilled = 0
+            ORDER BY D.scheduledDate ASC
+        )";
+    
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            result.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"fullName", (const char*)sqlite3_column_text(stmt, 1)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 2)},
+                {"age", sqlite3_column_int(stmt, 3)},
+                {"gender", (const char*)sqlite3_column_text(stmt, 4)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 5)},
+                {"hospitalName", (const char*)sqlite3_column_text(stmt, 6)},
+                {"scheduledDate", (const char*)sqlite3_column_text(stmt, 7)},
+                {"fulfilled", sqlite3_column_int(stmt, 8)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(result.dump(), "application/json");
+    });
+
+    svr.Get("/donation-requests/fulfilled", [](const Request& req, Response& res) {
+        json result = json::array();
+        sqlite3* db = Database::getDB();
+    
+        std::string sql = R"(
+            SELECT D.requestID, D.fullName, D.bloodType, D.age, D.gender, D.contact,
+                   H.name AS hospitalName, D.scheduledDate, D.fulfilled
+            FROM DonationRequest D
+            JOIN Hospital H ON D.hospitalID = H.hospitalID
+            WHERE D.fulfilled = 1
+            ORDER BY D.scheduledDate DESC
+        )";
+    
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            result.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"fullName", (const char*)sqlite3_column_text(stmt, 1)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 2)},
+                {"age", sqlite3_column_int(stmt, 3)},
+                {"gender", (const char*)sqlite3_column_text(stmt, 4)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 5)},
+                {"hospitalName", (const char*)sqlite3_column_text(stmt, 6)},
+                {"scheduledDate", (const char*)sqlite3_column_text(stmt, 7)},
+                {"fulfilled", sqlite3_column_int(stmt, 8)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(result.dump(), "application/json");
+    });
+
+    svr.Post(R"(/donation-request/(\d+)/fulfill)", [](const Request& req, Response& res) {
+        int requestID = std::stoi(req.matches[1]);
+    
+        try {
+            auto data = json::parse(req.body);
+            std::string bloodType = data["bloodType"];
+            int quantity = data["quantity"];
+    
+            bool success = DonationRequest::fulfillRequest(requestID, bloodType, quantity);
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(json({{"success", success}}).dump(), "application/json");
+        } catch (...) {
+            res.status = 400;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(R"({"success":false,"message":"Invalid input"})", "application/json");
+        }
+    });
+    
+    svr.Post("/recipient", [](const Request& req, Response& res) {
+        try {
+            auto data = json::parse(req.body);
+            std::string name = data["name"];
+            std::string bloodType = data["bloodType"];
+            std::string urgency = data["urgency"];
+            std::string contact = data["contact"];
+            int hospitalID = data["hospitalID"];
+    
+            bool success = Recipient::addRecipient(name, bloodType, urgency, contact, hospitalID);
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(json({{"success", success}}).dump(), "application/json");
+        } catch (...) {
+            res.status = 400;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Access-Control-Allow-Origin", "*");
+res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+res.set_header("Access-Control-Allow-Headers", "Content-Type");
+            res.set_content(R"({"success":false,"message":"Invalid input"})", "application/json");
+        }
+    });
+    svr.Get("/recipients", [](const Request& req, Response& res) {
+        json result = json::array();
+        sqlite3* db = Database::getDB();
+        std::string sql =
+            "SELECT recipientID,name,bloodType,urgencyLevel,contact,hospitalID,fulfilled "
+            "FROM Recipient ORDER BY createdAt DESC;";
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            result.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"name", (const char*)sqlite3_column_text(stmt, 1)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 2)},
+                {"urgency", (const char*)sqlite3_column_text(stmt, 3)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 4)},
+                {"hospitalID", sqlite3_column_int(stmt, 5)},
+                {"fulfilled", sqlite3_column_int(stmt, 6)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(result.dump(), "application/json");
+    });
+    svr.Get("/recipients/unfulfilled", [](const Request& req, Response& res) {
+        json result = json::array();
+        sqlite3* db = Database::getDB();
+        std::string sql =
+            "SELECT recipientID,name,bloodType,urgencyLevel,contact,hospitalID,fulfilled "
+            "FROM Recipient WHERE fulfilled=0 ORDER BY urgencyLevel DESC;";
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            result.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"name", (const char*)sqlite3_column_text(stmt, 1)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 2)},
+                {"urgency", (const char*)sqlite3_column_text(stmt, 3)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 4)},
+                {"hospitalID", sqlite3_column_int(stmt, 5)},
+                {"fulfilled", sqlite3_column_int(stmt, 6)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(result.dump(), "application/json");
+    });
+            
+    svr.Get("/recipients/urgent", [](const Request& req, Response& res) {
+        json result = json::array();
+        sqlite3* db = Database::getDB();
+        std::string sql =
+            "SELECT recipientID,name,bloodType,urgencyLevel,contact,hospitalID,fulfilled "
+            "FROM Recipient WHERE urgencyLevel = 'High' AND fulfilled = 0 ORDER BY createdAt DESC;";
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            result.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"name", (const char*)sqlite3_column_text(stmt, 1)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 2)},
+                {"urgency", (const char*)sqlite3_column_text(stmt, 3)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 4)},
+                {"hospitalID", sqlite3_column_int(stmt, 5)},
+                {"fulfilled", sqlite3_column_int(stmt, 6)}
+            });
+        }
+        sqlite3_finalize(stmt);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(result.dump(), "application/json");
+    });
+    
+
+    svr.Put(R"(/recipient/(\d+))", [](const Request& req, Response& res) {
+        int id = std::stoi(req.matches[1]);
+        auto data = json::parse(req.body);
+    
+        bool success = Recipient::updateRecipient(
+            id,
+            data["name"],
+            data["bloodType"],
+            data["urgency"],
+            data["contact"],
+            data["hospitalID"]
+        );
+    res.set_header("Access-Control-Allow-Origin", "*");
+res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+    });
+    svr.Delete(R"(/recipient/(\d+))", [](const Request& req, Response& res) {
+        int id = std::stoi(req.matches[1]);
+        bool success = Recipient::deleteRecipient(id);
+    
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+    });
+    svr.Post(R"(/recipient/(\d+)/fulfill)", [](const Request& req, Response& res) {
+        int id = std::stoi(req.matches[1]);
+        auto data = json::parse(req.body);
+        int quantity = data["quantity"];
+    
+        Recipient::fulfillRecipientNeed(id, quantity);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", true}}).dump(), "application/json");
+    });
+            
+// ✅ Register a new donor using full logic
+svr.Post("/donor", [](const Request& req, Response& res) {
+    try {
+        auto data = json::parse(req.body);
+
+        std::string username = data["username"];
+        std::string name = data["name"];
+        int age = data["age"];
+        std::string gender = data["gender"];
+        std::string bloodType = data["bloodType"];
+        std::string contact = data["contact"];
+
+        bool success = Donor::addDonor(username, name, age, gender, bloodType, contact);
+
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+    } catch (const std::exception& e) {
+        res.status = 400;
+        res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(R"({"success": false, "message": "Invalid request body"})", "application/json");
+    }
+});
+// DELETE donor
+svr.Delete(R"(/donor/(\d+))", [](const Request& req, Response& res) {
+    int id = std::stoi(req.matches[1]);
+    bool success = Donor::deleteDonor(id);
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_content(json({{"success", success}}).dump(), "application/json");
+});
+svr.Get("/donors", [](const Request& req, Response& res) {
+    sqlite3* db = Database::getDB();
+    std::string query = "SELECT donorID, username, name, age, gender, bloodType, contact, createdAt FROM Donor";
+    sqlite3_stmt* stmt;
+
+    json donors = json::array();
+
+    if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            donors.push_back({
+                {"id", sqlite3_column_int(stmt, 0)},
+                {"username", (const char*)sqlite3_column_text(stmt, 1)},
+                {"name", (const char*)sqlite3_column_text(stmt, 2)},
+                {"age", sqlite3_column_int(stmt, 3)},
+                {"gender", (const char*)sqlite3_column_text(stmt, 4)},
+                {"bloodType", (const char*)sqlite3_column_text(stmt, 5)},
+                {"contact", (const char*)sqlite3_column_text(stmt, 6)},
+                {"createdAt", (const char*)sqlite3_column_text(stmt, 7)}
+            });
+        }
+        sqlite3_finalize(stmt);
+
+        res.set_content(donors.dump(), "application/json");
+        res.status = 200;
+    } else {
+        res.status = 500;
+        res.set_content(R"({"success": false, "message": "Query failed"})", "application/json");
+    }
+
+    // ✅ Always include CORS headers
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.set_header("Access-Control-Allow-Headers", "Content-Type");
+});
+
+
+
+// Filter by blood type
+svr.Get(R"(/donors/type/([\w+-]+))", [](const Request& req, Response& res) {
+    std::string bloodType = req.matches[1];
+    json result = json::array();
+    sqlite3* db = Database::getDB();
+    std::string sql = "SELECT donorID, username, name, age, gender, bloodType, contact, createdAt FROM Donor WHERE bloodType = ? ORDER BY name;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, bloodType.c_str(), -1, SQLITE_STATIC);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        result.push_back({
+            {"id", sqlite3_column_int(stmt, 0)},
+            {"username", (const char*)sqlite3_column_text(stmt, 1)},
+            {"name", (const char*)sqlite3_column_text(stmt, 2)},
+            {"age", sqlite3_column_int(stmt, 3)},
+            {"gender", (const char*)sqlite3_column_text(stmt, 4)},
+            {"bloodType", (const char*)sqlite3_column_text(stmt, 5)},
+            {"contact", (const char*)sqlite3_column_text(stmt, 6)},
+            {"createdAt", (const char*)sqlite3_column_text(stmt, 7)}
+        });
+    }
+    sqlite3_finalize(stmt);
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_content(result.dump(), "application/json");
+});
+
+
+
+
+
+
+
     // 👤 Create Donor
     svr.Post("/donor", [](const Request& req, Response& res) {
         try {
@@ -136,6 +476,7 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
 
             bool success = (sqlite3_step(stmt) == SQLITE_DONE);
             sqlite3_finalize(stmt);
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(json({{"success", success}}).dump(), "application/json");
@@ -376,9 +717,6 @@ svr.Put(R"(/hospital/(\d+))", [](const Request& req, Response& res) {
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_content(json({{"success", success}}).dump(), "application/json");
 });
-
-
-
 
     // ✅ Start the server
     std::cout << "🟢 Server is running on http://localhost:8080\n";

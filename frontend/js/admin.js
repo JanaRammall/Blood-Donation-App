@@ -1,7 +1,6 @@
 // File: js/admin.js
 
 function loadSection(section) {
-  // Fetch and display the corresponding section
   fetch(`sections/${section}.html`)
     .then(response => {
       if (!response.ok) {
@@ -13,13 +12,18 @@ function loadSection(section) {
       const container = document.getElementById('dashboardContent');
       container.innerHTML = html;
 
-      // Wait for DOM to be updated before loading script
+      // Remove previously loaded script
+      const existingScript = document.getElementById(`${section}-script`);
+      if (existingScript) existingScript.remove();
+
+      // Delay to ensure HTML is fully inserted
       setTimeout(() => {
         const script = document.createElement('script');
+        script.id = `${section}-script`;
         script.src = `js/${section}.js`;
         script.onload = () => console.log(`✅ ${section}.js loaded`);
         document.body.appendChild(script);
-      }, 50); // slight delay ensures DOM elements exist
+      }, 100); // 100ms is usually enough
     })
     .catch(error => {
       console.error(error);

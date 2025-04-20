@@ -1,0 +1,43 @@
+<!-- File: sections/recipient.html -->
+<h2>🩸 Manage Recipients</h2>
+
+<form id="addRecipientForm">
+  <label for="name">Full Name:</label>
+  <input type="text" id="name" required />
+
+  <label for="bloodType">Blood Type:</label>
+  <input type="text" id="bloodType" required />
+
+  <label for="urgency">Urgency:</label>
+  <select id="urgency" required>
+    <option value="">-- Select --</option>
+    <option value="Low">Low</option>
+    <option value="Moderate">Moderate</option>
+    <option value="High">High</option>
+  </select>
+
+  <label for="contact">Contact:</label>
+  <input type="text" id="contact" required />
+
+  <label for="hospitalID">Hospital ID:</label>
+  <input type="number" id="hospitalID" required />
+
+  <button type="submit">➕ Add Recipient</button>
+</form>
+
+<hr />
+
+<h3>📋 Registered Recipients</h3>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Blood</th><th>Urgency</th><th>Contact</th>
+      <th>Hospital</th><th>Status</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="recipientTable">
+    <!-- JavaScript loads data here -->
+  </tbody>
+</table>
+
+<script src="js/recipient.js"></script>
