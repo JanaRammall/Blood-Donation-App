@@ -3,6 +3,7 @@
 #include "../utils/json.hpp"
 #include "../core/Recipient.h"
 #include "../core/Donor.h"
+#include "../core/DonationRequest.h"
 
 #include <iostream>
 #include <iomanip>
