@@ -1,0 +1,128 @@
+/* Base styling */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(120deg, #ffe4e4, #fce1e1);
+  }
+  
+  /* Centering container */
+  .login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  /* Login card */
+  .login-card {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 330px;
+  }
+  
+  /* Heading */
+  .login-card h2 {
+    margin-bottom: 25px;
+    font-weight: 800;
+    color: #d62828;
+    font-size: 1.6rem;
+    line-height: 1.4;
+  }
+  
+  .login-card h2 span {
+    color: #1d3557;
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+  
+  /* Username input */
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    background: #f8f9ff;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+  
+  /* Password field wrapper */
+  .password-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  
+  .password-wrapper input {
+    width: 100%;
+    padding: 12px 14px;
+    padding-right: 36px; /* for icon */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    background: #f8f9ff;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+  
+  /* Focus effect */
+  input[type="text"]:focus,
+  .password-wrapper input:focus {
+    outline: none;
+    border-color: #a8dadc;
+    box-shadow: 0 0 5px #a8dadc;
+  }
+  
+  /* Eye icon */
+  .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    opacity: 0.6;
+    line-height: 1;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  
+  .toggle-password:hover {
+    opacity: 1;
+  }
+  
+  /* Login button */
+  button {
+    width: 100%;
+    padding: 12px;
+    background-color: #1d3557;
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #457b9d;
+  }
+  
+  /* Login message */
+  #loginMessage {
+    margin-top: 15px;
+    color: #e63946;
+    font-weight: 500;
+  }
+  

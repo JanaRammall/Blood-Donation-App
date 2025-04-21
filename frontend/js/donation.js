@@ -39,6 +39,7 @@ async function loadPending() {
   try {
     const res = await fetch("http://localhost:8080/donation-requests/pending");
     const data = await res.json();
+    console.log("✅ Pending data:", data); // ✅ Debugging
     const tbody = document.getElementById("pendingTable");
     tbody.innerHTML = "";
     data.forEach(d => {
@@ -72,22 +73,34 @@ async function loadFulfilled() {
     console.error("❌ Failed to load fulfilled requests", err);
   }
 }
-
-// 💉 Fulfill Request
 async function fulfill(id, bloodType) {
+  id = parseInt(id);
   const quantity = prompt("Enter number of units to fulfill:", "1");
   if (!quantity || isNaN(quantity)) return alert("❌ Invalid quantity");
+
+  const payload = {
+    quantity: parseInt(quantity),
+    bloodType: bloodType
+  };
+
+  console.log("🟡 ID:", id);
+  console.log("🟡 BloodType:", bloodType);
+  console.log("🟡 Payload to send:", payload);
+  console.log("🟡 Request URL:", `http://localhost:8080/donation-request/${id}/fulfill`);
 
   try {
     const res = await fetch(`http://localhost:8080/donation-request/${id}/fulfill`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity: parseInt(quantity) })
+      body: JSON.stringify(payload)
     });
+
     const result = await res.json();
+    console.log("🟢 Fulfill response:", result);
     alert(result.success ? "✅ Request fulfilled!" : "❌ Fulfillment failed");
-    loadPending();
+    if (result.success) loadPending();
   } catch (err) {
+    console.error("🔴 Error fulfilling request:", err);
     alert("❌ Error fulfilling request");
   }
 }

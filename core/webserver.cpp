@@ -3,6 +3,7 @@
 #include "../utils/json.hpp"
 #include "../core/Recipient.h"
 #include "../core/Donor.h"
+#include "../core/User.h"
 #include "../core/DonationRequest.h"
 
 #include <iostream>
@@ -650,6 +651,48 @@ svr.Delete(R"(/user/(\w+))", [](const Request& req, Response& res) {
 
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_content(json({{"success", success}}).dump(), "application/json");
+});
+svr.Post("/user", [](const Request& req, Response& res) {
+    try {
+        auto data = json::parse(req.body);
+        std::string username = data["username"];
+        std::string password = data["password"];
+        std::string role     = data["role"];
+
+        bool success = User::registerUser(username, password, role);
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+    } catch (...) {
+        res.status = 400;
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(R"({"success": false, "message": "Invalid input"})", "application/json");
+    }
+});
+svr.Put(R"(/user/(\w+))", [](const Request& req, Response& res) {
+    std::string username = req.matches[1];
+
+    try {
+        auto data = json::parse(req.body);
+        std::string newRole = data["role"];
+
+        sqlite3* db = Database::getDB();
+        std::string query = "UPDATE User SET role = ? WHERE username = ?";
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+
+        sqlite3_bind_text(stmt, 1, newRole.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, username.c_str(), -1, SQLITE_TRANSIENT);
+
+        bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+        sqlite3_finalize(stmt);
+
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(json({{"success", success}}).dump(), "application/json");
+    } catch (...) {
+        res.status = 400;
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_content(R"({"success": false})", "application/json");
+    }
 });
 
 // GET all hospitals

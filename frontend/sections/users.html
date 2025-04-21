@@ -1,7 +1,28 @@
-<!-- File: sections/users.html -->
-<section class="dashboard-section">
-  <h2>👤 User Accounts</h2>
-  <table id="usersTable">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <h3>➕ Create User</h3>
+  <form id="createUserForm">
+    <input type="text" id="newUsername" placeholder="Username" required />
+    <input type="password" id="newPassword" placeholder="Password" required />
+    <select id="newRole">
+      <option value="admin">Admin</option>
+      <option value="staff">Staff</option>
+      <option value="viewer">Viewer</option>
+      <option value="audit">Audit</option>
+    </select>
+    <button type="submit">Create</button>
+  </form>
+  <p id="userCreateMsg"></p>
+
+  <table id="usersTable" border="1">
     <thead>
       <tr>
         <th>Username</th>
@@ -10,8 +31,9 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- JS will populate this -->
-    </tbody>
+    <tbody></tbody>
   </table>
-</section>
+
+  <script src="user.js"></script>
+</body>
+</html>
