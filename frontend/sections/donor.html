@@ -1,36 +1,68 @@
-<h2>🧑‍🤝‍🧑 Donor Management</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donor Management</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
 
-<form id="donorForm">
-  <input type="text" id="username" placeholder="Username" required />
-  <input type="text" id="name" placeholder="Full Name" required />
-  <input type="number" id="age" placeholder="Age" required />
-  <select id="gender" required>
-    <option value="">Select Gender</option>
-    <option value="M">Male</option>
-    <option value="F">Female</option>
-  </select>
-  <input type="text" id="bloodType" placeholder="Blood Type (e.g. A+)" required />
-  <input type="text" id="contact" placeholder="Contact Info" required />
-  <button type="submit">Submit</button>
-  <p id="msg"></p>
-</form>
+  <h2>🧑‍🤝‍🧑 Donor Management</h2>
 
+  <!-- Donor Form (hidden for viewer & audit) -->
+  <form id="donorForm">
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="text" id="name" placeholder="Full Name" required />
+    <input type="number" id="age" placeholder="Age" required />
+    <select id="gender" required>
+      <option value="">Select Gender</option>
+      <option value="M">Male</option>
+      <option value="F">Female</option>
+    </select>
+    <input type="text" id="bloodType" placeholder="Blood Type (e.g. A+)" required />
+    <input type="text" id="contact" placeholder="Contact Info" required />
+    <button type="submit">Submit</button>
+    <p id="msg"></p>
+  </form>
 
-<hr />
+  <hr />
 
-<label for="filterType">🔍 Filter by Blood Type:</label>
-<input type="text" id="filterType" placeholder="e.g. A+" />
-<button onclick="filterByBloodType()">Search</button>
-<button onclick="loadDonors()">Reset</button>
+  <!-- Filter section (visible to all except audit) -->
+  <label for="filterType">🔍 Filter by Blood Type:</label>
+  <input type="text" id="filterType" placeholder="e.g. A+" />
+  <button onclick="filterByBloodType()">Search</button>
+  <button onclick="loadDonors()">Reset</button>
 
-<h3>📋 Registered Donors</h3>
-<table>
-  <thead>
-    <tr>
-      <th>ID</th><th>Username</th><th>Name</th><th>Age</th><th>Gender</th><th>Blood</th><th>Contact</th><th>Created</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody id="donorTable"></tbody>
-</table>
+  <h3>📋 Registered Donors</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Username</th><th>Name</th><th>Age</th><th>Gender</th><th>Blood</th><th>Contact</th><th>Created</th><th id="actionHeader">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="donorTable"></tbody>
+  </table>
 
-<script src="js/donor.js"></script>
+  <script src="js/donor.js"></script>
+  <script>
+    const role = localStorage.getItem("role");
+
+    if (!role) {
+      alert("Access denied. No role found.");
+      window.location.href = "index.html";
+    }
+
+    // Viewer should only see search/filter + donor list (no form, no actions)
+    if (role === "viewer") {
+      document.getElementById("donorForm").style.display = "none";
+    }
+
+    // Auditor should not be here
+    if (role === "auditor"){
+      alert("Access Denied");
+      window.location.href = "admin.html";
+    }
+  </script>
+</body>
+</html>

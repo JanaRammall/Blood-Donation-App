@@ -7,9 +7,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -91,17 +89,16 @@
 
   <nav>
     <ul>
-      <li><a href="#" data-section="donor">🧑‍⚕️ Manage Donors</a></li>
-      <li><a href="#" data-section="hospital">🏥 Manage Hospitals</a></li>
-      <li><a href="#" data-section="request">📄 Manage Requests</a></li>
-      <li><a href="#" data-section="inventory">🧪 Blood Inventory</a></li>
-      <li><a href="#" data-section="users">👤 Manage Users</a></li>
-      <li><a href="#" data-section="stats">📊 View Statistics</a></li>
-      <li><a href="#" data-section="create_admin">➕ Create Admin</a></li>
-      <li><a href="#" data-section="assign_role">🔁 Assign Role</a></li>
-      <li><a href="#" data-section="recipient">🎯 Manage Recipients</a></li>
-      <li><a href="#" data-section="donation">💌 Donation Requests</a></li>
-      <li><a href="#" data-section="log">📜 Log</a></li>
+      <li><a href="#" id="btnDonor" data-section="donor">🧑‍⚕️ Manage Donors</a></li>
+      <li><a href="#" id="btnHospital" data-section="hospital">🏥 Manage Hospitals</a></li>
+      <li><a href="#" id="btnInventory" data-section="inventory">🧪 Blood Inventory</a></li>
+      <li><a href="#" id="btnUsers" data-section="users">👤 Manage Users</a></li>
+      <li><a href="#" id="btnStats" data-section="stats">📊 View Statistics</a></li>
+      <li><a href="#" id="btnCreateAdmin" data-section="create_admin">➕ Create Admin</a></li>
+      <li><a href="#" id="btnAssignRole" data-section="assign_role">🔁 Assign Role</a></li>
+      <li><a href="#" id="btnRecipient" data-section="recipient">🎯 Manage Recipients</a></li>
+      <li><a href="#" id="btnDonation" data-section="donation">💌 Donation Requests</a></li>
+      <li><a href="#" id="btnLog" data-section="log">📜 Log</a></li>
     </ul>
   </nav>
 
@@ -110,6 +107,48 @@
       <p>Welcome! Please choose a functionality from the menu above.</p>
     </section>
   </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const role = localStorage.getItem("role");
+
+      if (!role) {
+        alert("Access denied. No role found.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      // AUDITOR
+      if (role === "audit") {
+        document.getElementById("btnDonor").style.display = "none";
+        document.getElementById("btnHospital").style.display = "none";
+        document.getElementById("btnInventory").style.display = "none";
+        document.getElementById("btnUsers").style.display = "none";
+        document.getElementById("btnStats").style.display = "none";
+        document.getElementById("btnCreateAdmin").style.display = "none";
+        document.getElementById("btnAssignRole").style.display = "none";
+        document.getElementById("btnRecipient").style.display = "none";
+        document.getElementById("btnDonation").style.display = "none";
+      }
+
+      // VIEWER
+      if (role === "viewer") {
+        document.getElementById("btnUsers").style.display = "none";
+        document.getElementById("btnCreateAdmin").style.display = "none";
+        document.getElementById("btnAssignRole").style.display = "none";
+        document.getElementById("btnLog").style.display = "none";
+      }
+
+      // STAFF
+      if (role === "staff") {
+        document.getElementById("btnUsers").style.display = "none";
+        document.getElementById("btnAssignRole").style.display = "none";
+        document.getElementById("btnCreateAdmin").style.display = "none";
+        document.getElementById("btnLog").style.display = "none";
+        document.getElementById("btnStats").style.display = "none";
+      }
+    });
+  </script>
 
   <script src="js/admin.js"></script>
 </body>

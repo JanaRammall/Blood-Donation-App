@@ -5,7 +5,7 @@
 #include "../core/Donor.h"
 #include "../core/User.h"
 #include "../core/DonationRequest.h"
-
+#include "../utils/Logger.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -128,7 +128,7 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
     svr.Post("/donation-request", [](const Request& req, Response& res) {
         try {
             auto data = json::parse(req.body);
-            std::string name = data["fullName"];  // ✅ FIXED here
+            std::string name = data["fullName"];
             std::string bloodType = data["bloodType"];
             int age = data["age"];
             std::string gender = data["gender"];
@@ -136,16 +136,26 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
             int hospitalID = data["hospitalID"];
             std::string scheduledDate = data["scheduledDate"];
     
+            // ✅ Get username from body or header
+            std::string createdBy = "unknown";
+            if (data.contains("createdBy")) createdBy = data["createdBy"];
+            else if (req.has_header("X-User")) createdBy = req.get_header_value("X-User");
+    
             bool success = DonationRequest::createRequest(name, bloodType, age, gender, contact, hospitalID, scheduledDate);
+    
+            if (success) {
+                ::Logger::log(createdBy, "Added donation request for donor: " + name);
+            }
+    
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(json({{"success", success}}).dump(), "application/json");
+    
         } catch (...) {
             res.status = 400;
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(R"({"success":false,"message":"Invalid input"})", "application/json");
         }
     });
-    
     
     svr.Get("/donation-requests/pending", [](const Request& req, Response& res) {
         json result = json::array();
@@ -224,6 +234,10 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
             int quantity = data["quantity"];
     
             bool success = DonationRequest::fulfillRequest(requestID, bloodType, quantity);
+            if (success && data.contains("fulfilledBy")) {
+                std::string fulfilledBy = data["fulfilledBy"];
+                ::Logger::log(fulfilledBy, "Fulfilled donation request #" + std::to_string(requestID));
+            }
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(json({{"success", success}}).dump(), "application/json");
         } catch (...) {
@@ -243,6 +257,10 @@ svr.Options(R"(.*)", [](const Request& req, Response& res) {
             int hospitalID = data["hospitalID"];
     
             bool success = Recipient::addRecipient(name, bloodType, urgency, contact, hospitalID);
+            if (success && data.contains("createdBy")) {
+                ::Logger::log(data["createdBy"], "Added new recipient: " + name);
+            }
+            
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(json({{"success", success}}).dump(), "application/json");
         } catch (...) {
@@ -357,6 +375,10 @@ res.set_header("Access-Control-Allow-Headers", "Content-Type");
         int quantity = data["quantity"];
     
         Recipient::fulfillRecipientNeed(id, quantity);
+        if (data.contains("fulfilledBy")) {
+            ::Logger::log(data["fulfilledBy"], "Marked recipient #" + std::to_string(id) + " as fulfilled");
+        }
+        
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(json({{"success", true}}).dump(), "application/json");
     });
@@ -374,7 +396,10 @@ svr.Post("/donor", [](const Request& req, Response& res) {
         std::string contact = data["contact"];
 
         bool success = Donor::addDonor(username, name, age, gender, bloodType, contact);
-
+        if (success && data.contains("createdBy")) {
+            ::Logger::log(data["createdBy"], "Registered new donor: " + name);
+        }
+        
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(json({{"success", success}}).dump(), "application/json");
     } catch (const std::exception& e) {
@@ -389,6 +414,11 @@ svr.Post("/donor", [](const Request& req, Response& res) {
 svr.Delete(R"(/donor/(\d+))", [](const Request& req, Response& res) {
     int id = std::stoi(req.matches[1]);
     bool success = Donor::deleteDonor(id);
+    if (success && req.has_header("X-User")) {
+        std::string username = req.get_header_value("X-User");
+        ::Logger::log(username, "Deleted donor ID: " + std::to_string(id));
+    }
+    
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_content(json({{"success", success}}).dump(), "application/json");
 });
@@ -582,6 +612,7 @@ svr.Delete("/blood/expired", [](const Request& req, Response& res) {
         std::string sql = "SELECT timestamp, username, activity FROM Log ORDER BY timestamp DESC";
     
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            std::cerr << "❌ SQLITE ERROR in /logs: " << sqlite3_errmsg(db) << std::endl;  // ⬅️ PRINT THIS
             res.status = 500;
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(R"({"success": false, "message": "Query failed"})", "application/json");
@@ -600,6 +631,7 @@ svr.Delete("/blood/expired", [](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(logs.dump(), "application/json");
     });
+    
     
     
     // 👥 GET /users
@@ -630,14 +662,18 @@ svr.Delete("/blood/expired", [](const Request& req, Response& res) {
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(users.dump(), "application/json");
     });
+// done
+
 // 🗑️ DELETE /user/:username
 svr.Delete(R"(/user/(\w+))", [](const Request& req, Response& res) {
-    std::string username = req.matches[1];  // Extract username from route
-    sqlite3* db = Database::getDB();
+    std::string username = req.matches[1];  // Extract target username
+    std::string deletedBy = "unknown";
+    if (req.has_header("X-User")) deletedBy = req.get_header_value("X-User");
 
+    sqlite3* db = Database::getDB();
     std::string query = "DELETE FROM User WHERE username = ?";
     sqlite3_stmt* stmt;
-    
+
     if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         res.status = 500;
         res.set_header("Access-Control-Allow-Origin", "*");
@@ -649,9 +685,15 @@ svr.Delete(R"(/user/(\w+))", [](const Request& req, Response& res) {
     bool success = (sqlite3_step(stmt) == SQLITE_DONE);
     sqlite3_finalize(stmt);
 
+    if (success) {
+        ::Logger::log(deletedBy, "Deleted user: " + username);
+    }
+
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_content(json({{"success", success}}).dump(), "application/json");
 });
+
+// ✅ POST /user — Create a new user
 svr.Post("/user", [](const Request& req, Response& res) {
     try {
         auto data = json::parse(req.body);
@@ -659,7 +701,17 @@ svr.Post("/user", [](const Request& req, Response& res) {
         std::string password = data["password"];
         std::string role     = data["role"];
 
+        // Identify the actor
+        std::string createdBy = "unknown";
+        if (data.contains("createdBy")) createdBy = data["createdBy"];
+        else if (req.has_header("X-User")) createdBy = req.get_header_value("X-User");
+
         bool success = User::registerUser(username, password, role);
+
+        if (success) {
+            ::Logger::log(createdBy, "Created user account for: " + username);
+        }
+
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(json({{"success", success}}).dump(), "application/json");
     } catch (...) {
@@ -668,6 +720,8 @@ svr.Post("/user", [](const Request& req, Response& res) {
         res.set_content(R"({"success": false, "message": "Invalid input"})", "application/json");
     }
 });
+
+// ✅ PUT /user/:username — Update role of existing user
 svr.Put(R"(/user/(\w+))", [](const Request& req, Response& res) {
     std::string username = req.matches[1];
 
@@ -675,16 +729,30 @@ svr.Put(R"(/user/(\w+))", [](const Request& req, Response& res) {
         auto data = json::parse(req.body);
         std::string newRole = data["role"];
 
+        std::string updatedBy = "unknown";
+        if (data.contains("updatedBy")) updatedBy = data["updatedBy"];
+        else if (req.has_header("X-User")) updatedBy = req.get_header_value("X-User");
+
         sqlite3* db = Database::getDB();
         std::string query = "UPDATE User SET role = ? WHERE username = ?";
         sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+
+        if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+            res.status = 500;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(R"({"success": false, "message": "Prepare failed"})", "application/json");
+            return;
+        }
 
         sqlite3_bind_text(stmt, 1, newRole.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 2, username.c_str(), -1, SQLITE_TRANSIENT);
 
         bool success = (sqlite3_step(stmt) == SQLITE_DONE);
         sqlite3_finalize(stmt);
+
+        if (success) {
+            ::Logger::log(updatedBy, "Updated role of user " + username + " to " + newRole);
+        }
 
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(json({{"success", success}}).dump(), "application/json");
@@ -695,6 +763,7 @@ svr.Put(R"(/user/(\w+))", [](const Request& req, Response& res) {
     }
 });
 
+//done
 // GET all hospitals
 svr.Get("/hospitals", [](const Request& req, Response& res) {
     sqlite3* db = Database::getDB();

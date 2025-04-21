@@ -19,12 +19,16 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
           window.location.href = "admin.html";
           break;
         case "staff":
-          window.location.href = "staff.html";
+          window.location.href = "admin.html";
           break;
         case "viewer":
-          window.location.href = "viewer.html";
+          window.location.href = "admin.html";
           break;
+          case "audit":
+            window.location.href = "admin.html";
+            break;
       }
+
     } else {
       document.getElementById("loginMessage").textContent = data.message || "Login failed.";
     }

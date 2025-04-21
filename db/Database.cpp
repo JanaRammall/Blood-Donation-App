@@ -117,6 +117,7 @@ void Database::createTables(sqlite3* db) {
         ");"
 
         "CREATE TABLE IF NOT EXISTS Log ("
+        "  logID INTEGER PRIMARY KEY AUTOINCREMENT,"
         "  timestamp TEXT DEFAULT (datetime('now')),"
         "  username TEXT,"
         "  activity TEXT"

@@ -1,9 +1,16 @@
 console.log("✅ donor.js loaded");
-loadDonors();
 
-let donorForm  = document.getElementById("donorForm");
+// Get user role from localStorage
+const role = localStorage.getItem("role");
+const donorForm = document.getElementById("donorForm");
 const table = document.getElementById("donorTable");
 
+// Hide form if role is viewer or audit
+if (role === "viewer" || role === "audit") {
+  if (donorForm) donorForm.style.display = "none";
+}
+
+// Load donors
 async function loadDonors(type = "") {
   const url = type
     ? `http://localhost:8080/donors/type/${type}`
@@ -16,6 +23,15 @@ async function loadDonors(type = "") {
 
     data.forEach(d => {
       const row = document.createElement("tr");
+      let actions = "";
+
+      if (role === "admin" || role === "staff") {
+        actions = `
+          <button onclick="editDonor(${d.id}, '${d.name}', ${d.age}, '${d.gender}', '${d.bloodType}', '${d.contact}')">✏️</button>
+          <button onclick="deleteDonor(${d.id})">🗑️</button>
+        `;
+      }
+
       row.innerHTML = `
         <td>${d.id}</td>
         <td>${d.username}</td>
@@ -25,10 +41,8 @@ async function loadDonors(type = "") {
         <td>${d.bloodType}</td>
         <td>${d.contact}</td>
         <td>${d.createdAt}</td>
-        <td>
-          <button onclick="editDonor(${d.id}, '${d.name}', ${d.age}, '${d.gender}', '${d.bloodType}', '${d.contact}')">✏️</button>
-          <button onclick="deleteDonor(${d.id})">🗑️</button>
-        </td>`;
+        <td>${actions}</td>
+      `;
       table.appendChild(row);
     });
   } catch (err) {
@@ -36,38 +50,42 @@ async function loadDonors(type = "") {
   }
 }
 
-donorForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (donorForm) {
+  donorForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const data = {
-    username: document.getElementById("username").value,
-    name: document.getElementById("name").value,
-    age: parseInt(document.getElementById("age").value),
-    gender: document.getElementById("gender").value,
-    bloodType: document.getElementById("bloodType").value,
-    contact: document.getElementById("contact").value,
-  };
+    const data = {
+      username: document.getElementById("username").value,
+      name: document.getElementById("name").value,
+      age: parseInt(document.getElementById("age").value),
+      gender: document.getElementById("gender").value,
+      bloodType: document.getElementById("bloodType").value,
+      contact: document.getElementById("contact").value,
+    };
 
-  try {
-    const res = await fetch("http://localhost:8080/donor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+    try {
+      const res = await fetch("http://localhost:8080/donor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-    const result = await res.json();
-    document.getElementById("msg").textContent = result.success
-      ? "✅ Donor registered successfully."
-      : "❌ Registration failed.";
+      const result = await res.json();
+      document.getElementById("msg").textContent = result.success
+        ? "✅ Donor registered successfully."
+        : "❌ Registration failed.";
 
-    loadDonors(); // Refresh the list
-    donorForm.reset();
-  } catch (err) {
-    document.getElementById("msg").textContent = "❌ Server error.";
-  }
-});
+      loadDonors(); // Refresh the list
+      donorForm.reset();
+    } catch (err) {
+      document.getElementById("msg").textContent = "❌ Server error.";
+    }
+  });
+}
 
 window.deleteDonor = async function (id) {
+  if (role !== "admin" && role !== "staff") return;
+
   if (!confirm("Delete donor?")) return;
 
   const res = await fetch(`http://localhost:8080/donor/${id}`, { method: "DELETE" });
@@ -77,6 +95,8 @@ window.deleteDonor = async function (id) {
 };
 
 window.editDonor = async function (id, name, age, gender, bloodType, contact) {
+  if (role !== "admin" && role !== "staff") return;
+
   const newName = prompt("Edit name:", name);
   const newAge = prompt("Edit age:", age);
   const newGender = prompt("Edit gender:", gender);
@@ -104,7 +124,5 @@ window.filterByBloodType = () => {
   const type = document.getElementById("filterType").value;
   if (type) loadDonors(type);
 };
-
-
 
 loadDonors();
